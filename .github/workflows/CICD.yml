@@ -70,8 +70,8 @@ jobs:
 
   release:
     name: Release
-    needs: [build, test]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, test, automerge]
+    if: always() && (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.base_ref == 'main' && needs.automerge.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -86,8 +86,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [release]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -101,7 +100,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "Deploying..."
-            mkdir /home/nimus/tugasinkubasiporos2
+            mkdir -p /home/nimus/tugasinkubasiporos2
             cd /home/nimus/tugasinkubasiporos2
             git pull origin main
             docker compose up -d --build
