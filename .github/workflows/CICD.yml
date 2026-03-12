@@ -66,7 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking completed, approving and merging Pull Request..."
-          gh pr merge ${{ github.event.pull_request.number }} --auto --merge
+          gh pr merge ${{ github.event.pull_request.number }} --merge --admin
 
   release:
     name: Release
