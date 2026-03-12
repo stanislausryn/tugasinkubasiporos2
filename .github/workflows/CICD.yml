@@ -87,20 +87,12 @@ jobs:
   deploy:
     name: Deploy
     needs: [release]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         
       - name: Run Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "Deploying..."
-            mkdir -p /home/nimus/tugasinkubasiporos2
-            cd /home/nimus/tugasinkubasiporos2
-            git pull origin main
-            docker compose up -d --build
+        run: |
+          echo "Deploying..."
+          docker compose up -d --build
