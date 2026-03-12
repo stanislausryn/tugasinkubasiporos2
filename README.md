@@ -1,7 +1,6 @@
-Todo App - Full Stack Docker Project
+Todo App
 
 Aplikasi Todo List sederhana dengan 3 service yang di-containerize menggunakan Docker dan Docker Compose.
-
 
 Arsitektur
 
@@ -34,7 +33,6 @@ tugasinkubasiporos1/
   .env
   .gitignore
 ```
-
 
 Cara Menjalankan
 
