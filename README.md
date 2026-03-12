@@ -1,7 +1,6 @@
-Todo App - Full Stack Docker Project
+Todo App
 
 Aplikasi Todo List sederhana dengan 3 service yang di-containerize menggunakan Docker dan Docker Compose.
-
 
 Arsitektur
 
@@ -34,7 +33,6 @@ tugasinkubasiporos1/
   .env
   .gitignore
 ```
-
 
 Cara Menjalankan
 
@@ -93,3 +91,29 @@ Fitur Docker
 - Persistent volume (db-data) agar data MySQL tidak hilang saat restart
 - Health check pada MySQL, backend menunggu DB siap sebelum start
 - Reverse proxy Nginx mem-forward /api ke Flask backend
+
+---
+
+### CI/CD Pipeline (GitHub Actions)
+
+Repositori ini telah dikonfigurasi dengan otomatisasi CI/CD menggunakan **GitHub Actions** (`.github/workflows/CICD.yml`). Pipeline ini memfasilitasi proses otomatis dari pengembangan hingga *deployment*.
+
+#### Alur Pipeline
+1. **Push ke branch `dev`**: Menjalankan proses **Build** dan **Test** sebagai validasi awal kode.
+2. **Pull Request dari `dev` ke `main`**: Menjalankan kembali proses **Build** dan **Test**. 
+   - Jika berhasil, GitHub Actions akan **otomatis menggabungkan (automerge)** PR tersebut berkat *GitHub CLI*.
+3. **Push/Merge ke branch `main`**: Menjalankan secara penuh: **Build**, **Test**, **Release** (Pembuatan dan Push Docker Image), dan **Deploy** (ke server via SSH).
+
+> **PENTING: Syarat Automerge PR**
+> Agar automerge bekerja, pastikan Anda telah mencentang opsi **"Allow auto-merge"** di *Settings > Pull Requests* pada repositori Anda. Anda juga harus memberikan izin baca dan tulis ke GitHub Actions di *Settings > Actions > General > Workflow permissions*.
+
+#### Repository Secrets yang Dibutuhkan
+Untuk menjalankan *stage* **Release** dan **Deploy**, Anda wajib menambahkan variabel rahasia berikut di repositori GitHub Anda (Buka **Settings** > **Secrets and variables** > **Actions** > **New repository secret**):
+
+| Secret Name | Deskripsi |
+| --- | --- |
+| `DOCKER_USERNAME` | Username akun Docker Hub Anda. |
+| `DOCKER_PASSWORD` | Password / Access Token akun Docker Hub Anda. |
+| `SSH_HOST` | IP Address public dari server VPS target deployment Anda. |
+| `SSH_USERNAME` | Username spesifik untuk akses SSH ke VPS Anda (misal: `root`, `ubuntu`, `nimus`). |
+| `SSH_PRIVATE_KEY` | Kredensial Private Key SSH (`id_rsa` / `id_ed25519`) milik VPS. Salin seluruh isi filenya termasuk `-----BEGIN ... KEY-----` dan `-----END ... KEY-----`. |

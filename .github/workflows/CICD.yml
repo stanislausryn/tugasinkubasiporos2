@@ -1,0 +1,107 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Run Build
+        run: |
+          echo "Building..."
+          docker compose build
+
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Run Test
+        run: |
+          echo "Testing..."
+          docker compose up -d
+          
+          echo "Waiting container..."
+          sleep 15
+          
+          echo "Checking container..."
+          docker compose ps
+          
+          echo "Healthchecking..."
+          curl -f http://localhost:5000/api/health || exit 1
+          
+          echo "Cleaning container..."
+          docker compose down
+
+  automerge:
+    name: Auto Merge
+    needs: [build, test]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Auto Merge Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking completed, approving and merging Pull Request..."
+          gh pr merge ${{ github.event.pull_request.number }} --auto --merge
+
+  release:
+    name: Release
+    needs: [build, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Run Release
+        run: |
+          echo "Releasing..."
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker tag tugasinkubasiporos2-frontend:latest myregistry/frontend:latest
+          docker push myregistry/frontend:latest
+
+  deploy:
+    name: Deploy
+    needs: release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
+      - name: Run Deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Deploying..."
+            mkdir /home/nimus/tugasinkubasiporos2
+            cd /home/nimus/tugasinkubasiporos2
+            git pull origin main
+            docker compose up -d --build
