@@ -82,10 +82,10 @@ jobs:
           echo "Releasing..."
           docker compose build
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker tag tugasinkubasiporos2-frontend:latest myregistry/tugasinkubasiporos2-frontend:latest
-          docker push myregistry/tugasinkubasiporos2-frontend:latest
-          docker tag tugasinkubasiporos2-backend:latest myregistry/tugasinkubasiporos2-backend:latest
-          docker push myregistry/tugasinkubasiporos2-backend:latest
+          docker tag tugasinkubasiporos2-frontend:latest ${{ secrets.DOCKER_USERNAME }}/tugasinkubasiporos2-frontend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/tugasinkubasiporos2-frontend:latest
+          docker tag tugasinkubasiporos2-backend:latest ${{ secrets.DOCKER_USERNAME }}/tugasinkubasiporos2-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/tugasinkubasiporos2-backend:latest
 
   deploy:
     name: Deploy
